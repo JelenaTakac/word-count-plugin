@@ -6,6 +6,8 @@ Description: A truly amazing plugin.
 Version: 1.0
 Author: Jelena
 Author URI: https://github.com/JelenaTakac
+Text Domain: wcpdomain
+Domain Path: /languages
 */
 
 // add_filter('the_content', 'addToEndOfPost');
@@ -25,6 +27,13 @@ class WordCountAndTimePlugin
         add_action('admin_menu', array($this, 'adminPage')); // 'admin_menu' - Fires before the administration menu loads in the admin.
         add_action('admin_init', array($this, 'settings')); // 'admin_init' is triggered before any other hook when a user accesses the admin area.
         add_filter('the_content', array($this, 'ifWrap'));
+
+        // Tell WordPress to load our text domain files
+        add_action('init', array($this, 'languages'));
+    }
+
+    function languages() {
+        load_plugin_textdomain('wcpdomain', false, dirname(plugin_basename(__FILE__)) . '/languages'); // load_plugin_textdomain - Loads a plugin’s translated strings.
     }
 
     function ifWrap($content) {
@@ -46,7 +55,7 @@ class WordCountAndTimePlugin
         }
         
         if (get_option('wcp_wordcount', '1')) {
-            $html .= 'This post has ' . $wordCount . ' words.<br>';
+            $html .= esc_html__('This post has', 'wcpdomain') . ' ' . $wordCount . ' ' . __('words', 'wcpdomain') . '.<br>';
         }
 
         if (get_option('wcp_charactercount', '1')) {
@@ -134,7 +143,7 @@ class WordCountAndTimePlugin
     function adminPage()
     {
         // add_options_page - Adds a submenu page to the Settings main menu.
-        add_options_page('Word Count Settings', 'Word Count', 'manage_options', 'word-count-settings-page', array($this, 'ourHTML'));
+        add_options_page('Word Count Settings', __('Word Count', 'wcpdomain'), 'manage_options', 'word-count-settings-page', array($this, 'ourHTML'));
     }
 
     // this function will render the our HTML
