@@ -2,7 +2,7 @@
 
 /*
 Plugin Name: Our Test Plugin
-Description: A trult amazing plugin.
+Description: A truly amazing plugin.
 Version: 1.0
 Author: Jelena
 Author URI: https://github.com/JelenaTakac
@@ -26,18 +26,72 @@ class WordCountAndTimePlugin
         add_action('admin_init', array($this, 'settings')); // 'admin_init' is triggered before any other hook when a user accesses the admin area.
     }
 
-    function settings() {
+    function settings()
+    {
         add_settings_section('wcp_first_section', null, null, 'word-count-settings-page'); // add_settings_section - Adds a new section to a settings page.
+
         add_settings_field('wcp_location', 'Display Location', array($this, 'locationHTML'), 'word-count-settings-page', 'wcp_first_section'); // add_settings_field - Adds a new field to a section of a settings page.
-        register_setting('wordcountplugin', 'wcp_location', array('sanitize_callback' => 'sanitize_text_field', 'default' => '0')); // register_setting - Registers a setting and its data inside database
+        register_setting('wordcountplugin', 'wcp_location', array('sanitize_callback' => array($this, 'sanitizeLocation'), 'default' => '0')); // register_setting - Registers a setting and its data inside database
+
+        add_settings_field('wcp_headline', 'Headline Text', array($this, 'headlineHTML'), 'word-count-settings-page', 'wcp_first_section');
+        register_setting('wordcountplugin', 'wcp_headline', array('sanitize_callback' => 'sanitize_text_field', 'default' => 'Post Statistics'));
+
+        add_settings_field('wcp_wordcount', 'Word Count', array($this, 'checkboxHTML'), 'word-count-settings-page', 'wcp_first_section', array('theName' => 'wcp_wordcount'));
+        register_setting('wordcountplugin', 'wcp_wordcount', array('sanitize_callback' => 'sanitize_text_field', 'default' => '1'));
+
+        add_settings_field('wcp_charactercount', 'Character Count', array($this, 'checkboxHTML'), 'word-count-settings-page', 'wcp_first_section', array('theName' => 'wcp_charactercount'));
+        register_setting('wordcountplugin', 'wcp_charactercount', array('sanitize_callback' => 'sanitize_text_field', 'default' => '1'));
+
+        add_settings_field('wcp_readtime', 'Read Time', array($this, 'checkboxHTML'), 'word-count-settings-page', 'wcp_first_section', array('theName' => 'wcp_readtime'));
+        register_setting('wordcountplugin', 'wcp_readtime', array('sanitize_callback' => 'sanitize_text_field', 'default' => '1'));
+        
     }
 
-    function locationHTML() { ?>
+    function sanitizeLocation($input)
+    {
+        if ($input != '0' and $input != '1') {
+            add_settings_error('wcp_location', 'wcp_location_error', 'Display location must be either beginning or end.');
+            return get_option('wcp_location');
+        }
+        return $input;
+    }
+
+    function checkboxHTML($args)
+    { ?>
+        <input type="checkbox" name="<?php echo $args['theName'] ?>" value="1" <?php checked(get_option($args['theName']), '1') ?>>
+    <?php }
+
+
+    function locationHTML()
+    { ?>
         <select name="wcp_location">
-            <option value="0">Beginning of post</option>
-            <option value="1">End of post</option>
+            <option value="0" <?php selected(get_option('wcp_location'), '0') ?>>Beginning of post</option>
+            <option value="1" <?php selected(get_option('wcp_location'), '1') ?>>End of post</option>
         </select>
     <?php }
+
+    function headlineHTML()
+    { ?>
+        <input type="text" name="wcp_headline" value="<?php echo esc_attr(get_option('wcp_headline')); ?>">
+    <?php }
+
+
+    /*
+    function wordcountHTML()
+    { ?>
+        <input type="checkbox" name="wcp_wordcount" value="1" <?php checked(get_option('wcp_wordcount'), '1') ?>>
+    <?php }
+
+    function charactercountHTML()
+    { ?>
+        <input type="checkbox" name="wcp_charactercount" value="1" <?php checked(get_option('wcp_charactercount'), '1') ?>>
+    <?php }
+
+    function readtimeHTML()
+    { ?>
+        <input type="checkbox" name="wcp_readtime" value="1" <?php checked(get_option('wcp_readtime'), '1') ?>>
+    <?php }
+    */
 
     function adminPage()
     {
@@ -51,7 +105,7 @@ class WordCountAndTimePlugin
         <div class="wrap">
             <h1>Word Count Settings</h1>
             <form action="options.php" method="POST">
-                <?php 
+                <?php
                 settings_fields('wordcountplugin'); // settings_fields - Outputs nonce, action, and option_page fields for a settings page (WordPress will do wverything for us - add the appropriate hidden HTML fields with the nonce value, action value. It's going to handle sort of the security and permission aspects for us.)
                 do_settings_sections('word-count-settings-page'); // do_settings_sections - Prints out all settings sections added to a particular settings page
                 submit_button();
