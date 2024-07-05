@@ -1,0 +1,67 @@
+<?php
+
+/*
+Plugin Name: Our Test Plugin
+Description: A trult amazing plugin.
+Version: 1.0
+Author: Jelena
+Author URI: https://github.com/JelenaTakac
+*/
+
+// add_filter('the_content', 'addToEndOfPost');
+
+// function addToEndOfPost($content) {
+//     if (is_single() && is_main_query()) {
+//         return $content . '<p>My name is Jelena</p>';
+//     }
+
+//     return $content;
+// }
+
+class WordCountAndTimePlugin
+{
+    function __construct()
+    {
+        add_action('admin_menu', array($this, 'adminPage')); // 'admin_menu' - Fires before the administration menu loads in the admin.
+        add_action('admin_init', array($this, 'settings')); // 'admin_init' is triggered before any other hook when a user accesses the admin area.
+    }
+
+    function settings() {
+        add_settings_section('wcp_first_section', null, null, 'word-count-settings-page'); // add_settings_section - Adds a new section to a settings page.
+        add_settings_field('wcp_location', 'Display Location', array($this, 'locationHTML'), 'word-count-settings-page', 'wcp_first_section'); // add_settings_field - Adds a new field to a section of a settings page.
+        register_setting('wordcountplugin', 'wcp_location', array('sanitize_callback' => 'sanitize_text_field', 'default' => '0')); // register_setting - Registers a setting and its data inside database
+    }
+
+    function locationHTML() { ?>
+        <select name="wcp_location">
+            <option value="0">Beginning of post</option>
+            <option value="1">End of post</option>
+        </select>
+    <?php }
+
+    function adminPage()
+    {
+        // add_options_page - Adds a submenu page to the Settings main menu.
+        add_options_page('Word Count Settings', 'Word Count', 'manage_options', 'word-count-settings-page', array($this, 'ourHTML'));
+    }
+
+    // this function will render the our HTML
+    function ourHTML()
+    { ?>
+        <div class="wrap">
+            <h1>Word Count Settings</h1>
+            <form action="options.php" method="POST">
+                <?php 
+                settings_fields('wordcountplugin'); // settings_fields - Outputs nonce, action, and option_page fields for a settings page (WordPress will do wverything for us - add the appropriate hidden HTML fields with the nonce value, action value. It's going to handle sort of the security and permission aspects for us.)
+                do_settings_sections('word-count-settings-page'); // do_settings_sections - Prints out all settings sections added to a particular settings page
+                submit_button();
+                ?>
+            </form>
+        </div>
+<?php }
+}
+
+$wordCountAndTimePlugin = new WordCountAndTimePlugin();
+
+
+?>
